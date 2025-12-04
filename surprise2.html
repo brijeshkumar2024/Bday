@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Another one</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #02040a;
+      font-family: Inter, sans-serif;
+      color: #fff;
+      overflow:hidden;
+    }
+
+    .stage {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .frame {
+      width: min(1100px, 94vw);
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+      transition: transform 6s ease-in-out; /* for slow zoom-out */
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+    }
+
+    .message {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.45);
+      padding: 14px 18px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      z-index:20;
+    }
+
+    .btn {
+      background: #f7c86b;
+      color: #000;
+      padding: 8px 14px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* Envelope Centered */
+    .envelope-wrap {
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      display:none;
+      z-index:40;
+      text-align:center;
+    }
+
+    .envelope {
+      width:170px;
+      height:120px;
+      position:relative;
+      cursor:pointer;
+    }
+
+    .env-body {
+      width:100%;
+      height:100%;
+      background: linear-gradient(180deg,#ffd6e8,#ffb3d9);
+      border-radius:12px;
+      position:relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .env-flap {
+      position:absolute;
+      left:0;right:0;top:-20px;
+      height:60px;
+      background:linear-gradient(180deg,#ffb3d9,#ff82c9);
+      border-radius:10px;
+      transform-origin:50% 90%;
+      transition:.9s cubic-bezier(.2,.9,.25,1);
+      box-shadow:0 8px 20px rgba(0,0,0,0.25);
+    }
+
+    .paper {
+      width:260px;
+      height:300px;
+      background:#fff;
+      border-radius:10px;
+      position:absolute;
+      left:50%; top:-40px;
+      transform:translateX(-50%);
+      opacity:0;
+      padding:20px;
+      box-shadow:0 20px 50px rgba(0,0,0,0.45);
+      transition:all .9s cubic-bezier(.2,.9,.25,1);
+    }
+    .paper.show { top:10px; opacity:1; }
+
+    .paper .text {
+      font-size:15px;
+      color:#111;
+      margin-top:12px;
+      white-space:pre-wrap;
+      font-family:"Segoe Script","Brush Script MT","Dancing Script",cursive;
+      min-height:160px;
+    }
+
+    #replayBtn {
+      position:absolute;
+      bottom:12px;
+      right:12px;
+      padding:6px 10px;
+      background:#ffffff40;
+      border:none;
+      border-radius:8px;
+      color:#fff;
+      cursor:pointer;
+      display:none;
+      z-index:50;
+    }
+
+    /* Fade-out Layer */
+    .fade-out {
+      position:absolute;
+      inset:0;
+      background:#000;
+      opacity:0;
+      z-index:90;
+      transition:opacity 2.8s ease-in-out;
+    }
+
+    /* BYE text */
+    .bye-text {
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%) scale(0.65);
+      font-size:95px;
+      font-weight:700;
+      color:#f7c86b;
+      opacity:0;
+      z-index:99;
+      transition:opacity 2.4s ease, transform 2.4s ease;
+      font-family:'Playfair Display', serif;
+      text-shadow:0 0 25px rgba(255,230,120,0.65);
+    }
+
+    /* Glitter Layer */
+    .glitter {
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:95;
+      opacity:0;
+      transition:opacity 2s ease;
+    }
+    .glitter span {
+      position:absolute;
+      width:6px;
+      height:6px;
+      background:#fff6b3;
+      border-radius:50%;
+      box-shadow:0 0 10px #ffef9e;
+      animation: glitterFloat 3s infinite ease-in-out;
+    }
+    @keyframes glitterFloat {
+      0% { transform: translateY(0) scale(1); opacity:1; }
+      50% { transform: translateY(-25px) scale(1.4); opacity:.6; }
+      100% { transform: translateY(0) scale(1); opacity:1; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="stage">
+  <div class="frame" id="frame">
+
+    <canvas id="reveal"></canvas>
+
+    <!-- Envelope -->
+    <div class="envelope-wrap" id="envelopeWrap">
+      <div class="envelope">
+        <div class="env-body">
+          <div class="env-flap" id="envFlap"></div>
+
+          <div class="paper" id="paper">
+            <div class="text" id="paperText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Message -->
+    <div class="message">
+      <div>
+        <h3 style="margin:0;color:#f7c86b;">For Someone Truly Wonderful — Sweta ✨</h3>
+        <p style="margin:5px 0 0;color:#bfc8cf;font-size:14px;">Tap anywhere to start and wait till last.</p>
+      </div>
+      <button class="btn" id="resetBtn">Play</button>
+    </div>
+— 
+    <!-- Replay -->
+    <button id="replayBtn">Replay</button>
+
+    <!-- Outro layers -->
+    <div class="fade-out" id="fade"></div>
+    <div class="glitter" id="glitter"></div>
+    <div class="bye-text" id="bye">Bye 👋 <br>You Deserve The Best — Always 💛</div>
+
+  </div>
+</div>
+
+<script>
+/* PHOTO REVEAL SETUP */
+const PHOTO_SRC="./Sweta/s3.jpg";
+const LAND_RADIUS=85;
+
+const frame=document.getElementById("frame");
+const canvas=document.getElementById("reveal");
+const ctx=canvas.getContext("2d");
+
+let DPR=window.devicePixelRatio||1, W,H;
+let photoImg=new Image(); photoImg.src=PHOTO_SRC;
+let maskCanvas,mctx;
+let started=false;
+
+function resize(){
+  const r=frame.getBoundingClientRect();
+  W=r.width; H=r.height;
+  canvas.width=W*DPR;
+  canvas.height=H*DPR;
+  canvas.style.width=W+"px";
+  canvas.style.height=H+"px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  initMask();
+}
+window.addEventListener("resize",()=>setTimeout(resize,200));
+
+function initMask(){
+  maskCanvas=document.createElement("canvas");
+  maskCanvas.width=W*DPR;
+  maskCanvas.height=H*DPR;
+  mctx=maskCanvas.getContext("2d");
+  mctx.setTransform(DPR,0,0,DPR,0,0);
+  mctx.fillStyle="#000";
+  mctx.fillRect(0,0,W,H);
+  drawPhoto();
+}
+
+function drawPhoto(){
+  ctx.clearRect(0,0,W,H);
+  if(photoImg.complete){
+    const sw=photoImg.width, sh=photoImg.height;
+    const scale=Math.max(W/sw,H/sh);
+    const iw=sw*scale, ih=sh*scale;
+    ctx.drawImage(photoImg,(W-iw)/2,(H-ih)/2,iw,ih);
+  }
+  ctx.drawImage(maskCanvas,0,0,W,H);
+}
+
+function eraseAt(x,y){
+  const R=LAND_RADIUS*DPR;
+  mctx.save();
+  mctx.globalCompositeOperation="destination-out";
+  const g=mctx.createRadialGradient(x,y,R*.2,x,y,R);
+  g.addColorStop(0,"rgba(255,255,255,1)");
+  g.addColorStop(1,"rgba(255,255,255,0)");
+  mctx.fillStyle=g;
+  mctx.beginPath();
+  mctx.arc(x,y,R,0,Math.PI*2);
+  mctx.fill();
+  mctx.restore();
+  drawPhoto();
+}
+
+function isFullyRevealed(){
+  const px=mctx.getImageData(0,0,W*DPR,H*DPR).data;
+  for(let i=3;i<px.length;i+=4){ if(px[i]>10) return false; }
+  return true;
+}
+
+function startRevealLoop(){
+  function step(){
+    eraseAt(Math.random()*W*DPR,Math.random()*H*DPR);
+    if(!isFullyRevealed()) requestAnimationFrame(step);
+    else showEnvelope();
+  }
+  requestAnimationFrame(step);
+}
+
+frame.addEventListener("click",()=>{
+  if(started) return;
+  started=true;
+  startRevealLoop();
+});
+
+/* ENVELOPE */
+const envelopeWrap=document.getElementById("envelopeWrap");
+const envFlap=document.getElementById("envFlap");
+const paper=document.getElementById("paper");
+const paperText=document.getElementById("paperText");
+const replayBtn=document.getElementById("replayBtn");
+
+function showEnvelope(){
+  envelopeWrap.style.display="block";
+  setTimeout(()=>openEnvelope(),350);
+}
+
+function openEnvelope(){
+  envFlap.style.transform="rotateX(-160deg)";
+  setTimeout(()=>{
+    paper.classList.add("show");
+    typeMessage();
+  },450);
+}
+
+function typeMessage(){
+  const msg=`Dear Sweta,
+
+May your days ahead be filled with calm
+moments, steady growth, and the kind of
+happiness that stays with you quietly but
+beautifully.
+
+Warm wishes,
+— Someone who truly cares.`;
+
+  paperText.textContent="";
+  let i=0;
+  (function type(){
+    if(i<=msg.length){
+      paperText.textContent=msg.slice(0,i++);
+      setTimeout(type,45);
+    } else {
+      replayBtn.style.display="block";
+      setTimeout(startOutro,3000); // WAIT 10s
+    }
+  })();
+}
+
+replayBtn.addEventListener("click",()=>{
+  envFlap.style.transform="rotateX(0deg)";
+  paper.classList.remove("show");
+  paperText.textContent="";
+  setTimeout(openEnvelope,500);
+});
+
+/* OUTRO EFFECTS */
+const fade=document.getElementById("fade");
+const bye=document.getElementById("bye");
+const glitter=document.getElementById("glitter");
+
+function startOutro(){
+
+  frame.style.transform="scale(0.92)"; /* slow zoom out */
+
+  for(let i=0;i<45;i++){
+    const s=document.createElement("span");
+    s.style.left=Math.random()*100+"%";
+    s.style.top=(40+Math.random()*50)+"%";
+    s.style.animationDuration=(2+Math.random()*3)+"s";
+    glitter.appendChild(s);
+  }
+
+  glitter.style.opacity=1;
+
+  fade.style.opacity=1;
+
+  setTimeout(()=>{
+    bye.style.opacity=1;
+    bye.style.transform="translate(-50%,-50%) scale(1)";
+  },2600);
+}
+
+/* RESET */
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  started=false;
+  location.reload();
+});
+
+/* Init */
+photoImg.onload=resize;
+</script>
+
+</body>
+</html>

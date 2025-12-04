@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Birthday Surprise</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#000;
+      --accent:#f6c85f;
+      --muted:#9aa4b2;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      background:#000;
+      font-family:Inter,Arial;
+      color:#fff;
+      overflow:hidden;
+    }
+
+    /* INTRO */
+    #intro{
+      position:fixed;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:20px;
+      z-index:10;
+    }
+    .title{
+      font-family:Playfair Display,serif;
+      font-size:clamp(32px,6vw,60px);
+      color:var(--accent);
+      margin:0 0 10px;
+    }
+    .sub{
+      font-size:16px;
+      color:var(--muted);
+      margin-bottom:18px;
+      max-width:800px;
+    }
+    #countdown{
+      font-size:22px;
+      margin:10px 0 18px;
+    }
+    button{
+      background:linear-gradient(90deg,#f6c85f,#ffd98a);
+      border:none;
+      padding:12px 24px;
+      border-radius:30px;
+      cursor:pointer;
+      font-weight:700;
+      color:#000;
+    }
+
+    /* POPUP */
+    #popup{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      backdrop-filter:blur(8px);
+      background:rgba(0,0,0,0.65);
+      z-index:9999;
+      animation:fadeIn .4s ease forwards;
+    }
+
+    #popupBox{
+      background:linear-gradient(180deg,#0d0d0d,#151515);
+      padding:30px 35px;
+      border-radius:20px;
+      max-width:340px;
+      width:90%;
+      text-align:center;
+      border:1px solid rgba(255,215,130,0.25);
+      box-shadow:
+        0 0 20px rgba(255,200,90,0.25),
+        0 8px 30px rgba(0,0,0,0.7);
+      transform:scale(.85);
+      animation:popUp .35s ease forwards;
+    }
+
+    #popupText{
+      font-size:17px;
+      color:#ffd98a;
+      line-height:1.6;
+      font-family:"Playfair Display", serif;
+    }
+
+    #closePopup{
+      margin-top:20px;
+      background:linear-gradient(90deg,#f6c85f,#ffd98a);
+      border:none;
+      padding:12px 28px;
+      border-radius:999px;
+      font-weight:700;
+      cursor:pointer;
+      color:#000;
+      box-shadow:0 6px 18px rgba(255,200,90,0.3);
+      transition:transform .2s;
+    }
+    #closePopup:hover{
+      transform:scale(1.05);
+    }
+
+    @keyframes popUp{
+      0%{transform:scale(.85); opacity:0;}
+      100%{transform:scale(1); opacity:1;}
+    }
+
+    @keyframes fadeIn{
+      from{opacity:0;}
+      to{opacity:1;}
+    }
+
+    /* PARTICLES */
+    #particles{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:1;
+    }
+    .particle{
+      position:absolute;
+      border-radius:50%;
+      will-change:transform,opacity;
+    }
+
+    /* CONTENT */
+    #content{
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .6s;
+      padding:50px;
+      margin-top:80px;
+    }
+  </style>
+</head>
+
+<body>
+
+<script>
+const CONFIG = {
+  name: "Sweta",
+  targetMonth: 12,
+  targetDay: 4
+};
+</script>
+
+
+<!-- INTRO SCREEN -->
+<div id="intro">
+  <div class="title">Advance Happy Birthday, <span id="namePlace"></span></div><br>
+  <div class="sub" id="introSub">A beautiful soul like you deserves a beautiful birthday.</div>
+  <div id="countdown"></div>
+
+  <button id="openBtn">Open Surprise</button>
+
+  <div style="margin-top:10px;font-size:13px;color:var(--muted)">
+    Good things take time… just like you 😄
+  </div>
+
+  <!-- ⭐ ADDED LINE HERE ⭐ -->
+  <div style="margin-top:6px;font-size:13px;color:#ffd98a;">
+    Laptop recommended for the full surprise experience ✨
+  </div>
+
+</div>
+
+
+<!-- POPUP -->
+<div id="popup">
+  <div id="popupBox">
+    <div id="popupText"></div>
+    <button id="closePopup">Okay</button>
+  </div>
+</div>
+
+
+<!-- PARTICLES -->
+<div id="particles"></div>
+
+
+<!-- CONTENT -->
+<div id="content">
+  <h2 style="font-family:Playfair Display;font-size:32px;">Your Surprise</h2>
+</div>
+
+
+<script>
+/* BASIC SETUP */
+const pad = n => String(n).padStart(2,'0');
+const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+const namePlace = document.getElementById("namePlace");
+const introSub  = document.getElementById("introSub");
+const countdownEl = document.getElementById("countdown");
+const openBtn = document.getElementById("openBtn");
+const intro  = document.getElementById("intro");
+const content = document.getElementById("content");
+
+namePlace.textContent = CONFIG.name;
+
+function targetDate(){
+  const now = new Date();
+  return new Date(now.getFullYear(), CONFIG.targetMonth-1, CONFIG.targetDay, 0,0,0,0);
+}
+
+function isUnlocked(){
+  const now = new Date();
+  const unlockTime = new Date(now.getFullYear(), CONFIG.targetMonth - 1, CONFIG.targetDay, 0, 0, 0);
+  return now >= unlockTime;
+}
+
+
+/* COUNTDOWN */
+function updateCountdown(){
+  const now = new Date();
+  const t = targetDate();
+
+  if(now >= t){
+    countdownEl.textContent = "";
+    introSub.textContent = "A beautiful soul like you deserves a beautiful birthday.";
+    return;
+  }
+
+  const diff = t - now;
+  const s = Math.floor(diff/1000);
+  const d = Math.floor(s/86400);
+  const h = Math.floor((s%86400)/3600);
+  const m = Math.floor((s%3600)/60);
+  const sec = s%60;
+
+  countdownEl.textContent = `${d}d ${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
+}
+setInterval(updateCountdown,1000);
+updateCountdown();
+
+
+/* POPUP */
+const popup = document.getElementById("popup");
+const popupText = document.getElementById("popupText");
+const closePopup = document.getElementById("closePopup");
+
+function showPopup(msg){
+  popupText.innerHTML = msg;
+  popup.style.display = "flex";
+}
+
+closePopup.addEventListener("click",()=> popup.style.display="none");
+
+
+/* OPEN BUTTON */
+openBtn.addEventListener("click", ()=>{
+
+  if(!isUnlocked()){
+    const now = new Date();
+    const unlockTime = new Date(now.getFullYear(), CONFIG.targetMonth - 1, CONFIG.targetDay, 0, 0, 0);
+    const diff = unlockTime - now;
+
+    const s = Math.floor(diff/1000);
+    const h = Math.floor((s%86400)/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = s%60;
+
+    showPopup(`
+      No cheating, <b>${CONFIG.name}</b> 😄<br>
+      Your surprise unlocks in<br>
+      <b>${pad(h)}h ${pad(m)}m ${pad(sec)}s</b> ✨
+    `);
+    return;
+  }
+
+  window.location.href = "surprise.html";
+});
+
+
+/* PARTICLES */
+(function(){
+  const container = document.getElementById("particles");
+  const colors = ["#f6c85f","#ffd98a","#ffffff55"];
+
+  for(let i=0;i<22;i++){
+    const el = document.createElement("div");
+    el.className="particle";
+    const size = 6 + Math.random()*26;
+    el.style.width = size+"px";
+    el.style.height = size+"px";
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.left = Math.random()*100+"%";
+    el.style.top = Math.random()*100+"%";
+    container.appendChild(el);
+
+    animateParticle(el);
+  }
+
+  function animateParticle(el){
+    const ax = 20+Math.random()*60;
+    const ay = 20+Math.random()*40;
+    const dur = 5000+Math.random()*6000;
+
+    el.animate(
+      [
+        {transform:"translate(0,0)",opacity:0.6},
+        {transform:`translate(${ax}px,${ay}px)`,opacity:1},
+        {transform:"translate(0,0)",opacity:0.5}
+      ],
+      {duration:dur,iterations:Infinity}
+    );
+  }
+})();
+</script>
+
+</body>
+</html>

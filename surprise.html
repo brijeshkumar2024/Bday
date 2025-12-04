@@ -1,0 +1,1062 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Revealed</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#030204; --bg-2:#081018; --muted:#a4b0bb;
+    --gold-1:#f7c86b; --gold-2:#ffd77a;
+    --accent:linear-gradient(90deg,var(--gold-1),var(--gold-2));
+    --max-width:980px; --radius:18px;
+  }
+  html,body{height:100%;margin:0;background:radial-gradient(1200px 600px at 10% 10%, rgba(255,200,80,0.03), transparent), linear-gradient(180deg,var(--bg-1),var(--bg-2));font-family:Inter,system-ui,Arial;color:#f1efe9;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  .wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 22px;gap:20px}
+
+  /* header */
+  .hero{text-align:center;max-width:var(--max-width);width:100%;}
+  .title{font-family:"Playfair Display",serif;font-size:40px;margin:0;display:inline-block;background:var(--accent);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 6px 22px rgba(2,2,2,0.6)}
+  .title::after{content:'';position:absolute;left:-50%;top:0;width:40%;height:100%;transform:skewX(-18deg);background:linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02), rgba(255,255,255,0.10));filter:blur(18px);opacity:0;transition:all 1.1s cubic-bezier(.2,.9,.2,1)}
+  .title.shine::after{left:120%;opacity:1;transform:skewX(-18deg) translateX(-220%)}
+  .subtitle{color:var(--muted);margin-top:8px;font-size:14px}
+
+  /* stage */
+  .stage{width:100%;max-width:var(--max-width);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--radius);padding:22px;box-shadow:0 30px 90px rgba(2,4,8,0.7);position:relative;overflow:hidden}
+  .stage-inner{display:flex;flex-direction:column;align-items:center;gap:14px}
+
+  /* reveal box */
+  .reveal-box{width:920px;max-width:calc(100% - 44px);height:560px;max-height:72vh;border-radius:12px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.02)}
+  .image-inner{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;--bg-img:none}
+  .image-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--bg-img);
+    background-size: cover;
+    background-position: center;
+    filter: blur(26px) brightness(0.55);
+    transform: scale(1.25);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .image-inner img{width:100%;height:100%;object-fit:contain;object-position:center top;display:block;filter:contrast(1.02) saturate(1.02);transform:scale(1.0);position:relative;z-index:2}
+
+  /* CLEAN CINEMATIC SIDE LIGHTS — NO BLUR AT ALL */
+  .reveal-box::before,
+  .reveal-box::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 22%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      to right,
+      rgba(255,200,80,0.18),
+      rgba(255,170,60,0.10),
+      rgba(0,0,0,0)
+    );
+  }
+
+  .reveal-box::after {
+    right: 0;
+    transform: scaleX(-1);
+  }
+
+  .reveal-box::before {
+    left: 0;
+  }
+
+  /* vertical moving golden light rays */
+  .light-ray {
+    position: absolute;
+    top: 0;
+    width: 8%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      rgba(255,220,120,0.3),
+      rgba(255,180,70,0.15),
+      rgba(0,0,0,0)
+    );
+    opacity: 0.35;
+    mix-blend-mode: screen;
+    animation: moveRay 8s linear infinite;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .light-ray.r2 { animation-duration: 10s; left: 70%; opacity: 0.25; }
+  .light-ray.r3 { animation-duration: 14s; left: 15%; opacity: 0.20; }
+
+  @keyframes moveRay {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+
+  .petals-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;              /* behind everything */
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* Floating premium words (static layout for premium feel) */
+  .floating-text-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    font-family: "Playfair Display", serif;
+    font-weight: 700;
+    color: rgba(255, 225, 160, 0.10);
+    font-size: 90px;
+    z-index: 9000;      /* ⭐ visible behind lock card */
+    display: block;     /* ⭐ always visible on unlock page */
+  }
+
+  .floating-text-bg span {
+    position: absolute;
+    animation: floatTxt 12s linear infinite;
+  }
+
+  @keyframes floatTxt {
+    0% { transform: translateY(100vh); opacity: 0; }
+    20% { opacity: 0.4; }
+    100% { transform: translateY(-20vh); opacity: 0; }
+  }
+
+  .petal {
+    position: absolute;
+    top: -40px;
+    width: 26px;
+    height: 26px;
+    background-image: url('./petals/petal-blackbg.png'); /* new petal */
+    background-size: cover;
+    opacity: 0.85;
+    animation: fallDown linear infinite;
+  }
+
+  @keyframes fallDown {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(120vh) rotate(220deg);
+      opacity: 0;
+    }
+  }
+
+  /* 🎈 Balloons (behind text, above petals) */
+  .balloons-bg {
+    position: absolute; /* inside hb-screen */
+    inset: 0;
+    z-index: 0;          /* behind hb-screen content */
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* single balloon */
+  .balloon {
+    position: absolute;
+    bottom: -120px;
+    width: 60px;
+    height: 80px;
+
+    background-image: url('./balloons/balloon.png'); /* transparent balloon PNG */
+    background-size: contain;
+    background-repeat: no-repeat;
+
+    opacity: 0.9;
+    animation: balloonFloat linear infinite;
+  }
+
+  @keyframes balloonFloat {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-130vh) rotate(10deg);
+      opacity: 0;
+    }
+  }
+
+  /* LEFT side text */
+  .side-left {
+    position: absolute;
+    left: 60px;
+
+    /* perfect vertical center */
+    top: 50%;
+    transform: translateY(-50%);
+
+    font-family: "Playfair Display", serif;
+    font-size: 44px;          /* ⭐ bigger text */
+    line-height: 1.25;        /* ⭐ spacing between Happy & Birthday */
+
+    color: rgba(255, 225, 160, 1);
+    text-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+    font-weight: 700;
+
+    pointer-events: none;
+    z-index: 4;
+}
+  
+
+  /* RIGHT side vertical SWETA */
+  .side-right {
+    position: absolute;
+    right: 60px;
+
+    top: 50%;
+    transform: translateY(-50%);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 14px;          /* ⭐ more spacing for premium look */
+    font-family: "Playfair Display", serif;
+    font-size: 40px;    /* ⭐ slightly bigger for balance */
+
+    color: rgba(255, 225, 160, 1);
+    text-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+
+    pointer-events: none;
+    z-index: 4;
+}
+
+
+  canvas.image-canvas{position:absolute;inset:0;display:block;transition:opacity .7s ease;pointer-events:auto}
+  .vignette{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;background:radial-gradient(60% 60% at 50% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.14) 48%, rgba(0,0,0,0.5) 100%)}
+  .spark-layer{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0.95}
+
+  .caption{position:absolute;left:18px;right:18px;bottom:18px;text-align:center;font-family:"Playfair Display",serif;font-weight:700;font-size:18px;color:var(--gold-1);text-shadow:0 6px 22px rgba(0,0,0,0.65)}
+  .caption .shine{background:linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.02));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* controls */
+  .controls{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap;width:100%}
+  .btn{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.04);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 6px 28px rgba(2,4,8,0.5);transition:transform .18s ease}
+  .btn.gold{position:relative;overflow:hidden}
+  .spacer{flex:1}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
+  .modal .card{backdrop-filter: blur(6px); background:linear-gradient(180deg, rgba(14,15,16,0.8), rgba(8,9,10,0.75));padding:22px;border-radius:14px;max-width:780px;width:92%;color:#fff;box-shadow:0 40px 120px rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.03)}
+
+/* LOCK overlay (we replace lock-icon with Doraemon circle + flower ring) */
+.lock-overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.95),rgba(0,0,0,0.98));display:flex;align-items:center;justify-content:center;z-index:10000;transition:opacity .45s ease}
+.lock-card{width:92%;max-width:520px;padding:34px;border-radius:14px;background:linear-gradient(180deg, rgba(8,8,8,0.95), rgba(12,12,12,0.9));text-align:center;border:1px solid rgba(255,255,255,0.03);box-shadow:0 40px 140px rgba(0,0,0,0.7)}
+.lock-title{font-family:"Playfair Display",serif;color:var(--gold-1);font-size:20px;margin:0 0 10px}
+.lock-sub{color:var(--muted);margin-bottom:18px}
+.lock-btn{background:linear-gradient(90deg,var(--gold-1),var(--gold-2));padding:12px 18px;border-radius:999px;border:none;color:#111;font-weight:800;cursor:pointer;box-shadow:0 18px 50px rgba(255,190,80,0.08)}
+
+/* Doraemon circular crop + glow + flower ring wrapper */
+.dora-wrap{position:relative;width:120px;height:120px;margin:6px auto 18px;display:flex;align-items:center;justify-content:center}
+.dora-circle{
+  width:106px;height:106px;border-radius:50%;overflow:hidden;display:block;
+  background: radial-gradient(circle at 30% 20%, rgba(0,150,255,0.14), rgba(0,80,180,0.22));
+  box-shadow:
+    0 8px 26px rgba(0,140,255,0.35),
+    0 18px 44px rgba(0,110,255,0.22),
+    inset 0 6px 14px rgba(255,255,255,0.06);
+  transform-origin:center;
+  animation:floatD 3.6s ease-in-out infinite;
+}
+.dora-circle img{width:110%;height:110%;object-fit:cover;border-radius:50%;transform:translateY(-2%);filter:brightness(1.04) contrast(1.06) saturate(1.12);}
+
+/* flower ring: svg placed absolute on top of the circular wrapper */
+.dora-flowers{position:absolute;left:0;top:0;width:120px;height:120px;pointer-events:none;mix-blend-mode:screen;filter:drop-shadow(0 8px 18px rgba(0,0,0,0.45));}
+
+/* subtle gold rim ring behind flowers for premium feel */
+.dora-rim{position:absolute;left:6px;top:6px;width:108px;height:108px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,230,170,0.05) inset, 0 0 18px rgba(255,200,110,0.04);pointer-events:none}
+
+/* float animation */
+@keyframes floatD{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
+
+/* heartbeat stage */
+.hb-screen{position:fixed;inset:0;background:#000;display:none;align-items:center;justify-content:center;z-index:10001;flex-direction:column;color:var(--gold-1)}
+.heart{width:188px;height:180px;border-radius:50%;display:inline-grid;place-items:center;background:radial-gradient(circle at 30% 20%, rgba(255,255,255,0.04), rgba(255,255,255,0.01));box-shadow:0 40px 140px rgba(0,0,0,0.7);transform-origin:center}
+.heart svg{width:90px;height:90px;fill:var(--gold-1);filter:drop-shadow(0 10px 30px rgba(0,0,0,0.6))}
+.heart.beat{animation:beat 900ms ease-in-out 3}
+@keyframes beat{0%{transform:scale(1)}28%{transform:scale(1.15)}50%{transform:scale(1)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+
+.typewriter{margin-top:18px;font-size:18px;color:#fff;min-height:30px}
+.countdown{font-family:"Playfair Display",serif;font-size:52px;margin-top:16px;color:var(--gold-1);transform-origin:center;opacity:0;transition:opacity .25s}
+
+/* blast full screen */
+.blast{position:fixed;inset:0;pointer-events:none;z-index:10002;display:none}
+
+/* FINAL 10/10 PREMIUM DORAEMON ICON */
+.lock-icon {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* New premium glow */
+  background: radial-gradient(circle at 50% 50%, 
+    rgba(255,255,255,0.18), 
+    rgba(0,120,255,0.45) 60%, 
+    rgba(0,80,200,0.35) 100%
+  );
+
+  box-shadow:
+    0 0 6px rgba(255,255,255,0.9),
+    0 0 22px rgba(0,150,255,0.45),
+    0 0 55px rgba(0,130,255,0.35),
+    inset 0 0 14px rgba(255,255,255,0.18);
+
+  overflow: hidden;
+  position: relative;
+  animation: floatD 3.6s ease-in-out infinite;
+}
+
+.lock-icon img {
+  width: 115%;
+  height: 115%;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: brightness(1.09) contrast(1.14) saturate(1.18);
+  
+  /* Subtle sway motion */
+  animation: swayD 4.8s ease-in-out infinite;
+}
+
+/* Soft flower glow ring (10/10 aesthetic) */
+.lock-icon::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 3px dotted rgba(255,180,200,0.65);
+  opacity: 0.9;
+  animation: bloom 5s ease-in-out infinite;
+}
+
+/* floating animation */
+@keyframes floatD {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* sway animation */
+@keyframes swayD {
+  0% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+  100% { transform: rotate(-2deg); }
+}
+
+/* bloom effect */
+@keyframes bloom {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.03); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+
+/* responsive tweaks */
+@media (max-width:920px){
+  .reveal-box{height:58vh}
+  .title{font-size:34px}
+}
+@media (max-width:560px){
+  .title{font-size:28px}
+  .countdown{font-size:40px}
+  .lock-card{padding:22px}
+}
+</style>
+</head>
+<body>
+
+  <div class="petals-bg" id="petalsArea"></div>
+  <div class="floating-text-bg" id="floatTextBox">
+    <span style="left:10%; animation-delay:0s;">Happy</span>
+    <span style="left:38%; animation-delay:2s;">Birthday</span>
+    <span style="left:70%; animation-delay:4s;">Sweta</span>
+  </div>
+
+  <div class="wrap">
+    <header class="hero">
+      <h1 class="title" id="heading">Happiest Birthday, Sweta</h1>
+      <div class="subtitle"></div>
+    </header>
+
+    <main class="stage" id="stage" role="region" aria-label="Birthday reveal">
+      <div class="stage-inner">
+        <div class="reveal-box" id="revealBox" role="button" tabindex="0" aria-label="Reveal area">
+          <!-- bokeh particle containers -->
+          <div class="bokeh-side left"></div>
+          <div class="bokeh-side right"></div>
+          <div class="image-inner" id="imageInner"><img id="slideImg" src="" alt="Memory slide"></div>
+          <canvas id="maskCanvas" class="image-canvas" aria-hidden="true"></canvas>
+          <svg class="spark-layer" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="white" stop-opacity="0.9"/><stop offset="1" stop-color="white" stop-opacity="0"/></radialGradient></defs>
+            <circle cx="12" cy="18" r="0.6" fill="url(#g)" opacity="0.9"></circle>
+            <circle cx="78" cy="12" r="0.5" fill="url(#g)" opacity="0.5"></circle>
+            <circle cx="46" cy="64" r="0.8" fill="url(#g)" opacity="0.7"></circle>
+          </svg>
+          <div class="vignette" aria-hidden="true"></div>
+          <div class="caption" id="revealCaption"><span class="shine">✨ A Beautiful Surprise Just For You ✨</span></div>
+          <div class="side-left" id="sideLeft">
+            <div>Happy</div>
+            <div>Birthday</div>
+          </div>
+          <div class="side-right">
+            <span>S</span>
+            <span>W</span>
+            <span>E</span>
+            <span>T</span>
+            <span>A</span>
+          </div>
+        </div>
+
+        <div class="controls">
+  
+  <button class="btn" id="prevBtn">Prev</button>
+  <button class="btn gold" id="pauseBtn">Pause</button>
+  <button class="btn" id="nextBtn">Next</button>
+
+  <div class="spacer"></div>
+
+  <!-- FIXED: Button that actually opens surprise2.html -->
+  <button class="btn gold" id="anotherBtn">More ?</button>
+
+  <button class="btn gold" id="openBtn">Open Message</button>
+
+</div>
+
+
+  <!-- modal -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="card">
+      <button class="close-x" id="closeModal" aria-label="Close">✕</button>
+      <h2>Happy Birthday, Sweta 🎉</h2>
+    <p>May this year bring you moments that warm your heart,<br>
+    surprises that light up your smile,<br>
+    and memories you’ll cherish forever.<br>
+    Today is all about you — shine your brightest. 💛</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <a id="downloadBtn" class="btn" href="#" download="memory-film.mp4">Download Film</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCK overlay -->
+  <div class="lock-overlay" id="lockOverlay" role="dialog" aria-modal="true" aria-label="Unlock surprise">
+    <div class="lock-card">
+      <!-- Doraemon + flowers -->
+      <div class="dora-wrap" aria-hidden="true">
+        <div class="dora-rim" aria-hidden="true"></div>
+
+          <!-- circular cropped Doraemon -->
+        <div class="dora-circle" id="doraCircle">
+          <!-- Put your Doraemon image at ./Sweta/doraemon.png -->
+          <img src="./Sweta/doraemon.png" alt="Doraemon" id="doraImg">
+        </div>
+
+        <!-- flower ring as inline SVG (pastel pink roses) -->
+        <svg class="dora-flowers" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <g id="flower">
+              <circle cx="0" cy="0" r="3.8" fill="#ffd5e2"/>
+              <path d="M-1.2-1.8c1.1-1.1 3.1-1.1 4.2 0 .9 1 1 2.7 0 3.6-1.1.9-2.7 1.1-3.9 0-1-1.1-1-2.6-.3-3.6z" fill="#ffb1d0"/>
+              <circle cx="0" cy="0" r="1.1" fill="#fff2f8"/>
+            </g>
+          </defs>
+          <!-- place 12 flowers around circle -->
+          <g transform="translate(60,60)">
+            <!-- rotate items -->
+            <use href="#flower" transform="translate(0,-48) rotate(0)"/>
+            <use href="#flower" transform="rotate(30) translate(0,-48) rotate(-30)"/>
+            <use href="#flower" transform="rotate(60) translate(0,-48) rotate(-60)"/>
+            <use href="#flower" transform="rotate(90) translate(0,-48) rotate(-90)"/>
+            <use href="#flower" transform="rotate(120) translate(0,-48) rotate(-120)"/>
+            <use href="#flower" transform="rotate(150) translate(0,-48) rotate(-150)"/>
+            <use href="#flower" transform="rotate(180) translate(0,-48) rotate(-180)"/>
+            <use href="#flower" transform="rotate(210) translate(0,-48) rotate(-210)"/>
+            <use href="#flower" transform="rotate(240) translate(0,-48) rotate(-240)"/>
+            <use href="#flower" transform="rotate(270) translate(0,-48) rotate(-270)"/>
+            <use href="#flower" transform="rotate(300) translate(0,-48) rotate(-300)"/>
+            <use href="#flower" transform="rotate(330) translate(0,-48) rotate(-330)"/>
+          </g>
+        </svg>
+      </div>
+
+      <h3 class="lock-title">Tap to Unlock Your Birthday Surprise</h3>
+      <div class="lock-sub">Reveal a little magic made just for you ✨</div>
+      <button class="lock-btn" id="unlockBtn" aria-label="Unlock surprise">Unlock Surprise</button>
+    </div>
+  </div>
+
+  <!-- heartbeat + typewriter screen -->
+  <div class="hb-screen" id="hbScreen" aria-hidden="true">
+    <div class="balloons-bg" id="balloonArea"></div>
+    <div class="heart" id="heartEl" aria-hidden="true">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-8-5.4-8-10.5S7.1 3 12 7.2 20 3 20 10.5 12 21 12 21z"/></svg>
+    </div>
+    <div class="typewriter" id="typeText" aria-live="polite"></div>
+    <div class="countdown" id="countEl" aria-hidden="true"></div>
+  </div>
+
+  <!-- blast canvas for sparkle explosion -->
+  <canvas id="blastCanvas" class="blast" aria-hidden="true"></canvas>
+
+<script>
+/* ========== CONFIG ========== */
+const IMAGES = [
+  
+  './Sweta/IMG-20251203-WA0084.jpg',
+  './Sweta/IMG-20251203-WA0082.jpg',
+  './Sweta/IMG-20251203-WA0083.jpg',
+  
+  './Sweta/sweta.jpg',
+  './Sweta/IMG-20251203-WA0076.jpg',
+  './Sweta/IMG-20251203-WA0072.jpg',
+  
+  
+  './Sweta/IMG-20251203-WA0075.jpg',
+  
+  './Sweta/IMG-20251203-WA0077.jpg',
+  './Sweta/IMG-20251203-WA0074.jpg',
+  './Sweta/IMG-20251203-WA0079.jpg',
+  './Sweta/IMG-20251203-WA0080.jpg',
+  './Sweta/IMG-20251203-WA0081.jpg',
+  './Sweta/IMG-20251203-WA0078.jpg',
+  './Sweta/IMG-20251203-WA0073.jpg',
+  
+  './Sweta/IMG-20251203-WA0084.jpg',
+  './Sweta/sweta2.jpg',
+  './Sweta/s4.jpg'
+  
+];
+const SLIDE_DURATION = 3000; // 3 seconds
+const REVEAL_DURATION = 3000;
+const PARTICLE_COUNT = 240;
+
+/* ========== ELEMENTS ========== */
+const lockOverlay = document.getElementById('lockOverlay');
+const unlockBtn = document.getElementById('unlockBtn');
+const hbScreen = document.getElementById('hbScreen');
+const heartEl = document.getElementById('heartEl');
+const typeText = document.getElementById('typeText');
+const countEl = document.getElementById('countEl');
+const blastCanvas = document.getElementById('blastCanvas');
+
+const canvas = document.getElementById('maskCanvas');
+const ctx = canvas.getContext('2d', { alpha: true });
+const box = document.getElementById('revealBox');
+const imgEl = document.getElementById('slideImg');
+const caption = document.getElementById('revealCaption');
+const stage = document.getElementById('stage');
+const title = document.querySelector('.title');
+
+let blastCtx, blastW=0, blastH=0;
+
+let width=0, height=0, DPR = Math.max(1, window.devicePixelRatio || 1);
+let particles = [], currentIndex = 0, playing = false, autoplayTimer = null, animHandle = null, phase = 0, revealTimeout = null;
+let IMAGES_LOADED = [], lastT = performance.now();
+let balloonInterval = null;
+
+/* 🌹 Floating petals system */
+function createPetal() {
+    const petalsArea = document.getElementById('petalsArea');
+    const petal = document.createElement('div');
+    petal.classList.add('petal');
+
+    // random X position across viewport width
+    const randomX = Math.random() * window.innerWidth;
+    petal.style.left = randomX + 'px';
+
+    // random size variation (20-45px)
+    const size = 20 + Math.random() * 25;
+    petal.style.width = size + 'px';
+    petal.style.height = size + 'px';
+
+    // random speed (6-12 seconds)
+    const duration = 6 + Math.random() * 6;
+    petal.style.animationDuration = duration + 's';
+
+    petalsArea.appendChild(petal);
+
+    // remove after animation completes
+    setTimeout(() => {
+        petal.remove();
+    }, duration * 1000);
+}
+
+/* Generate petals: 3 per 200ms interval */
+setInterval(() => {
+    createPetal();
+    createPetal();   // extra 1
+    createPetal();   // extra 2
+}, 200);
+/* helper: balloon creator (spawned during heartbeat only) */
+function makeBalloon() {
+  const area = document.getElementById('balloonArea');
+  if (!area) return;
+  const b = document.createElement('div');
+  b.classList.add('balloon');
+
+  // horizontal placement relative to area width
+  const randomX = Math.random() * area.clientWidth;
+  b.style.left = randomX + 'px';
+
+  // random size
+  const size = 50 + Math.random() * 60;
+  b.style.width = size + 'px';
+  b.style.height = size * 1.3 + 'px';
+
+  // speed
+  const dur = 6 + Math.random() * 8;
+  b.style.animationDuration = dur + 's';
+
+  area.appendChild(b);
+  setTimeout(() => b.remove(), dur * 1000);
+}
+
+/* ========== PRELOAD IMAGES ========== */
+IMAGES.forEach((p,i)=>{
+  const im = new Image();
+  im.crossOrigin = "anonymous";
+  im.onload = ()=> IMAGES_LOADED[i]=im;
+  im.onerror = ()=> { IMAGES_LOADED[i]=null; console.warn('image failed', p); }
+  im.src = p;
+});
+
+/* ========== CANVAS resize ========= */
+function resizeCanvas(){
+  const r = box.getBoundingClientRect();
+  width = Math.max(10, Math.floor(r.width));
+  height = Math.max(10, Math.floor(r.height));
+  canvas.width = Math.floor(width * DPR);
+  canvas.height = Math.floor(height * DPR);
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  // blast canvas full screen
+  blastW = window.innerWidth; blastH = window.innerHeight;
+  blastCanvas.width = Math.floor(blastW * DPR);
+  blastCanvas.height = Math.floor(blastH * DPR);
+  blastCanvas.style.width = blastW + 'px';
+  blastCanvas.style.height = blastH + 'px';
+  blastCtx = blastCanvas.getContext('2d'); blastCtx.setTransform(DPR,0,0,DPR,0,0);
+}
+
+/* ========== PARTICLES for mask ========= */
+class Particle {
+  constructor(init=false){ this.reset(init); }
+  reset(init=false){
+    this.x = Math.random()*width;
+    this.y = Math.random()*height;
+    this.size = 1 + Math.random()*6;
+    this.vx = (1 + Math.random()*2) * (0.6 + Math.random()*1.2);
+    this.vy = (Math.random()-0.5) * 0.9;
+    this.life = 0; this.maxLife = 120 + Math.random()*320;
+    const r = 238 + Math.floor(Math.random()*12);
+    const g = 185 + Math.floor(Math.random()*30);
+    const b = 100 + Math.floor(Math.random()*40);
+    this.color = `rgba(${r},${g},${b},1)`;
+  }
+  step(dt){ this.x += this.vx * dt; this.y += this.vy * dt + Math.sin((this.x+this.y+phase)*0.01)*0.3; this.life++;
+    if(this.x > width + 40 || this.y < -40 || this.y > height + 40 || this.life > this.maxLife){
+      this.reset(false); this.x = -30 - Math.random()*60; this.y = Math.random()*height; this.life=0;
+    }
+  }
+  draw(ctx){
+    const g = ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size*2);
+    g.addColorStop(0,'rgba(255,255,255,1)');
+    g.addColorStop(0.1,this.color);
+    g.addColorStop(0.35,this.color);
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); ctx.globalCompositeOperation='source-over';
+  }
+}
+function makeParticles(){ particles = []; for(let i=0;i<PARTICLE_COUNT;i++) particles.push(new Particle(true)); }
+
+/* ========== MASK behavior ========= */
+let maskFilledForSlide = false;
+function fillMaskOpaque(){ ctx.save(); ctx.globalCompositeOperation='source-over'; ctx.fillStyle='#000'; ctx.fillRect(0,0,width,height); ctx.restore(); maskFilledForSlide=true; canvas.style.opacity='1'; canvas.style.pointerEvents='auto'; }
+
+/* ========== ANIMATION loop ========= */
+function drawSweepLine(){
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  const band = ctx.createLinearGradient(-200 + phase*12, -100, width + 200 + phase*12, height + 100);
+  band.addColorStop(0,'rgba(0,0,0,0)'); band.addColorStop(0.46,'rgba(255,255,255,0.02)');
+  band.addColorStop(0.5,'rgba(255,255,255,0.06)'); band.addColorStop(0.54,'rgba(255,255,255,0.02)');
+  band.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = band; ctx.beginPath(); ctx.rect(0,0,width,height); ctx.fill(); ctx.restore();
+}
+function animateFrame(t){
+  const dt = Math.min(1,(t-lastT)/16); lastT=t; phase += dt * 6.5;
+  for(let p of particles){ p.step(dt); p.draw(ctx); }
+  drawSweepLine();
+  animHandle = requestAnimationFrame(animateFrame);
+}
+
+/* ========== SLIDES ========= */
+function showSlide(i){
+  currentIndex = (i + IMAGES.length) % IMAGES.length;
+  const loaded = IMAGES_LOADED[currentIndex];
+  imgEl.src = loaded ? loaded.src : IMAGES[currentIndex];
+  // update blurred background CSS variable to match current image
+  document.querySelector('.image-inner').style.setProperty('--bg-img', `url(${imgEl.src})`);
+  caption.textContent = `Slide ${currentIndex+1} / ${IMAGES.length}`;
+  // Control side text: show "Happy Birthday" and vertical SWETA on slides 0, 1, 2
+  const sideLeft = document.getElementById('sideLeft');
+  const sideRight = document.querySelector('.side-right');
+  if (currentIndex <= 2) {   // ⭐ slide 0,1,2 → show
+    sideLeft.style.display = "block";
+    sideRight.style.display = "flex";
+  } else {                   // ⭐ slide 3,4,5… → hide
+    sideLeft.style.display = "none";
+    sideRight.style.display = "none";
+  }
+  // Show static floating words only for slide index 1 (second photo)
+  const floatBox = document.getElementById('floatTextBox');
+  if (floatBox) {
+    if (currentIndex === 1) {
+      floatBox.style.display = 'block';
+    } else {
+      floatBox.style.display = 'none';
+    }
+  }
+  resetMaskAndParticles();
+  if(revealTimeout){ clearTimeout(revealTimeout); revealTimeout=null; }
+  revealTimeout = setTimeout(()=>{
+    canvas.style.transition='opacity .9s ease'; canvas.style.opacity='0';
+    setTimeout(()=>{ canvas.style.pointerEvents='none'; }, 950);
+  }, REVEAL_DURATION);
+}
+function nextSlide(){ showSlide(currentIndex+1); }
+function prevSlide(){ showSlide(currentIndex-1); }
+function resetMaskAndParticles(){
+  // ONLY for first slide (index 0)
+  if (currentIndex === 0) {
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.transition = '';
+    canvas.style.opacity = '1';
+    maskFilledForSlide = false;
+    resizeCanvas();
+    fillMaskOpaque();     // mask only on slide 1
+    makeParticles();
+  } else {
+    // For slides 2 onward → NO MASK
+    canvas.style.opacity = '0';
+    canvas.style.pointerEvents = 'none';
+  }
+}
+
+/* ========== AUTOPLAY control (start AFTER reveal sequence) ========= */
+function startAutoplay() {
+  stopAutoplay();
+  autoplayTimer = setInterval(() => {
+    nextSlide();
+  }, SLIDE_DURATION);
+  playing = true;
+}
+
+function stopAutoplay() {
+  if (autoplayTimer) {
+    clearInterval(autoplayTimer);
+    autoplayTimer = null;
+  }
+  playing = false;
+}
+
+/* ========== UI wiring: basic ======== */
+document.getElementById('prevBtn').addEventListener('click', ()=>{ prevSlide(); if(playing){ stopAutoplay(); startAutoplay(); } });
+document.getElementById('nextBtn').addEventListener('click', ()=>{ nextSlide(); if(playing){ stopAutoplay(); startAutoplay(); } });
+document.getElementById('pauseBtn').addEventListener('click',(e)=>{ const btn=e.currentTarget; if(playing){ playing=false; cancelAnimationFrame(animHandle); stopAutoplay(); btn.textContent='Resume'; } else { playing=true; lastT=performance.now(); animHandle=requestAnimationFrame(animateFrame); startAutoplay(); btn.textContent='Pause'; }}); 
+document.getElementById('openBtn').addEventListener('click', ()=>{ openModal(); });
+document.getElementById('closeModal').addEventListener('click', ()=>{ closeModal(); });
+document.getElementById('downloadBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  alert('Your memory film isn’t ready for download yet — but something even more magical is on the way ✨');
+});
+document.getElementById("anotherBtn").addEventListener("click", () => {
+  window.location.href = "surprise2.html";
+});
+
+
+function openModal(){ const m=document.getElementById('modal'); m.style.display='flex'; m.setAttribute('aria-hidden','false'); }
+function closeModal(){ const m=document.getElementById('modal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); }
+
+/* ========== CLICK burst on reveal box ========= */
+box.addEventListener('click',(e)=>{ const r=box.getBoundingClientRect(); const cx=e.clientX-r.left, cy=e.clientY-r.top; for(let i=0;i<48;i++){ const p=new Particle(); p.x = cx + (Math.random()-0.5)*40; p.y = cy + (Math.random()-0.5)*40; p.size = 3 + Math.random()*8; p.vx = 2 + Math.random()*6; p.vy = (Math.random()-0.5)*2; particles.push(p); } flash(cx,cy); });
+
+function flash(cx,cy){
+  const start = performance.now(); const dur=420;
+  function f(t){ const p=Math.min(1,(t-start)/dur); ctx.save(); ctx.globalCompositeOperation='destination-out'; const g=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(width,height)); g.addColorStop(0, `rgba(255,255,255,${0.22*(1-p)})`); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,width,height); ctx.restore(); if(p<1) requestAnimationFrame(f); }
+  requestAnimationFrame(f);
+}
+
+/* ========== BLAST sparks (fullscreen) ========= */
+function runBlast(x,y){
+  blastCanvas.style.display='block';
+  blastCtx.clearRect(0,0,blastW,blastH);
+  const sparks=[];
+  const count=80;
+  for(let i=0;i<count;i++){
+    sparks.push({
+      x: x + (Math.random()-0.5)*80,
+      y: y + (Math.random()-0.5)*80,
+      vx: (Math.random()-0.5)*8,
+      vy: (Math.random()-0.9)*8 - 2,
+      life: 0,
+      maxLife: 40 + Math.random()*40,
+      size: 2 + Math.random()*5,
+      col: `rgba(${230+Math.floor(Math.random()*25)},${170+Math.floor(Math.random()*50)},${80+Math.floor(Math.random()*40)},1)`
+    });
+  }
+  let start = performance.now();
+  function step(t){
+    const dt = (t-start)/16; start=t;
+    blastCtx.clearRect(0,0,blastW,blastH);
+    for(let s of sparks){
+      s.x += s.vx * (dt/1.5); s.y += s.vy * (dt/1.5) + 0.2*(dt/1.5);
+      s.vy += 0.12 * (dt/1.5);
+      s.life++;
+      const alpha = Math.max(0, 1 - s.life / s.maxLife);
+      blastCtx.beginPath();
+      blastCtx.fillStyle = s.col.replace(/,1\)/, `,${alpha})`);
+      blastCtx.arc(s.x, s.y, s.size * (1 + s.life/60), 0, Math.PI*2);
+      blastCtx.fill();
+    }
+    if(sparks.some(s=>s.life < s.maxLife)) requestAnimationFrame(step);
+    else { blastCtx.clearRect(0,0,blastW,blastH); blastCanvas.style.display='none'; }
+  }
+  requestAnimationFrame(step);
+}
+
+/* ========== SEQUENCE: unlock -> heartbeat -> typewriter -> countdown -> reveal ========= */
+
+/* Typewriter utility */
+function typeWriter(text, el, speed=42){
+  return new Promise(resolve=>{
+    el.textContent = '';
+    let i = 0;
+    function tick(){
+      if(i < text.length){ el.textContent += text[i++]; setTimeout(tick, speed + Math.random()*18); }
+      else resolve();
+    }
+    tick();
+  });
+}
+
+/* Countdown display */
+function showCountdown(){
+  return new Promise(resolve=>{
+    countEl.style.opacity = 1; countEl.style.transform = 'scale(1)';
+    const nums = ['3','2','1','Lesss Gooo!'];
+    let idx=0;
+    function showNext(){
+      if(idx >= nums.length){ countEl.style.opacity=0; resolve(); return; }
+      countEl.textContent = nums[idx++];
+      countEl.style.opacity = 1;
+      countEl.animate([{ transform: 'scale(0.6)', opacity:0 }, { transform:'scale(1.18)', opacity:1 }, { transform:'scale(0.98)', opacity:1 }], { duration:420, easing:'cubic-bezier(.2,.9,.2,1)'});
+      setTimeout(()=>{ countEl.style.opacity=0; setTimeout(showNext, 180); }, 820);
+    }
+    showNext();
+  });
+}
+
+/* Run the full cinematic reveal (trigger after unlock) */
+async function runRevealSequence(){
+  // hide lock, show heartbeat screen
+  lockOverlay.style.display='none';
+  hbScreen.style.display='flex';
+  hbScreen.setAttribute('aria-hidden','false');
+  // start balloons for heartbeat screen (two at a time)
+  if (typeof makeBalloon === 'function') {
+    balloonInterval = setInterval(() => {
+      makeBalloon();
+      makeBalloon();
+    }, 500);
+  }
+
+  // heart beat (CSS animation) — we listen to animationend
+  heartEl.classList.add('beat');
+  await new Promise(r => setTimeout(r, 1700)); // allow beats to run (approx 2 beats)
+
+  // typewriter messages (bonus)
+  await typeWriter('Sweta, I made something for you...', typeText, 36);
+  await new Promise(r=>setTimeout(r, 600));
+  typeText.textContent = '';
+  await typeWriter('Ready ?', typeText, 60);
+  await new Promise(r=>setTimeout(r, 600));
+  typeText.textContent = '';
+
+  // countdown
+  await showCountdown();
+
+  // small screen shake and spark blast toward center of reveal box, then show main reveal
+  hbScreen.style.opacity = 0;
+  hbScreen.style.transition = 'opacity .35s ease';
+  setTimeout(()=>{ hbScreen.style.display='none'; hbScreen.setAttribute('aria-hidden','true'); }, 420);
+
+  // run a blast at revealBox center (convert to page coords)
+  const r = box.getBoundingClientRect();
+  const cx = r.left + r.width/2;
+  const cy = r.top + r.height/2;
+  runBlast(cx, cy);
+
+  // start actual slideshow animations after tiny delay
+  setTimeout(()=>{ startMainReveal(); }, 340);
+}
+
+/* startMainReveal: enable canvas animation and autoplay */
+function startMainReveal(){
+  // start music
+  const music = document.getElementById('bgMusic');
+  if (music) {
+    music.volume = 0.7;
+    music.play().catch(e => console.log('Autoplay blocked', e));
+  }
+
+  // stop heartbeat balloons when slideshow begins
+  if (balloonInterval) { clearInterval(balloonInterval); balloonInterval = null; }
+  const ba = document.getElementById('balloonArea'); if(ba) ba.innerHTML = '';
+  // set first slide and start particle reveal loop
+  resizeCanvas();
+  fillMaskOpaque();
+  makeParticles();
+
+  // start animate
+  lastT = performance.now();
+  animHandle = requestAnimationFrame(animateFrame);
+
+  // show first slide and autoplay
+  showSlide(0);
+  startAutoplay();
+
+  // add shine to title for cinematic feel
+  title.classList.add('shine');
+}
+
+/* unlock handler (simulate breaking the lock with small animation) */
+unlockBtn.addEventListener('click', async ()=>{
+  // attempt to prime audio (satisfy autoplay policies)
+  try { document.getElementById('bgMusic')?.play().catch(()=>{}); } catch(e){}
+  // small press animation
+  unlockBtn.animate([{ transform:'scale(1)' }, { transform:'scale(.96)' }, { transform:'scale(1)' }], { duration:280, easing:'ease' });
+
+  // tiny overlay shake (CSS-free)
+  lockOverlay.animate([{ transform:'translateX(0)' }, { transform:'translateX(-8px)' }, { transform:'translateX(8px)' }, { transform:'translateX(0)' }], { duration:380, easing:'cubic-bezier(.2,.9,.2,1)' });
+
+  // reveal sequence
+  setTimeout(()=>{ runRevealSequence(); }, 520);
+});
+
+/* Allow clicking anywhere on overlay to unlock too */
+lockOverlay.addEventListener('click', (e)=>{
+  if(e.target === lockOverlay) unlockBtn.click();
+});
+
+/* Keyboard shortcut to unlock */
+window.addEventListener('keydown', (e)=>{
+  if(lockOverlay.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); unlockBtn.click(); }
+});
+
+/* ========== INIT (do not start main reveal until unlocked) ========= */
+function init(){
+  resizeCanvas();
+  // initially keep the mask filled so nothing visible
+  fillMaskOpaque();
+  // do not start animate loop yet — wait for reveal
+  // preload blast canvas sizing
+  // makeParticles called later when reveal begins
+  // small entrance for header and stage
+  setTimeout(()=>{ document.querySelector('.hero').classList.add('visible'); document.querySelector('.stage').classList.add('visible'); }, 240);
+}
+
+/* responsive handling */
+let resizeTimer = null;
+window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer = setTimeout(()=>{ resizeCanvas(); /* keep current mask state */ }, 120); });
+
+/* start up */
+window.addEventListener('load', ()=>{ init(); });
+
+/* Accessibility: allow space/enter on revealBox to produce sparkle burst after reveal */
+box.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' || e.key === ' '){
+    e.preventDefault();
+    const rect = box.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    for(let i=0;i<48;i++){ const p=new Particle(); p.x = cx + (Math.random()-0.5)*40; p.y = cy + (Math.random()-0.5)*40; p.size = 3 + Math.random()*8; p.vx = 2 + Math.random()*6; p.vy = (Math.random()-0.5)*2; particles.push(p); }
+    flash(cx,cy);
+  }
+});
+
+</script>
+
+<audio id="bgMusic" loop>
+  <source src="./music/song.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  function isSmallDevice() {
+    const ua = navigator.userAgent || "";
+
+    // userAgent based mobile check
+    const isUADetected = /Android|iPhone|iPod|Opera Mini|IEMobile/i.test(ua);
+
+    // Screen based check (phones are almost always < 820px)
+    const isScreenSmall = Math.max(window.innerWidth, window.innerHeight) < 820;
+
+    return isUADetected || isScreenSmall;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (isSmallDevice()) {
+      document.documentElement.style.background = "#000";
+      document.body.innerHTML = `
+        <div style="
+          height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:#000;
+          color:#f6c85f;
+          font-family: 'Playfair Display', serif;
+          text-align:center;
+          padding:20px;
+        ">
+          <div>
+            <h2 style="font-size:28px; margin-bottom:12px;">✨ Best Viewed on Laptop ✨</h2>
+            <p style="font-size:16px; line-height:1.6; color:#ddd;">
+              This premium cinematic birthday surprise is designed<br>
+              for a larger screen experience.
+              <br><br>
+              Please open this link on your <b>laptop or PC</b>  
+              to enjoy the full magical reveal. 💛
+            </p>
+          </div>
+        </div>
+      `;
+    }
+  });
+</script>
+
+
+</body>
+</html>

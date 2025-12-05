@@ -239,7 +239,7 @@ function updateCountdown(){
   const m = Math.floor((s%3600)/60);
   const sec = s%60;
 
-  countdownEl.textContent = `${d}d ${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
+  countdownEl.textContent = ` ${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
 }
 setInterval(updateCountdown,1000);
 updateCountdown();
